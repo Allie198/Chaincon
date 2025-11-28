@@ -1,26 +1,20 @@
-import fs from 'fs'
-import Block  from './block'
- 
+import fs from "fs";
+import Block from "./block.js";
 
-export class Blockchain {
-    constructor (difficulty=2, miningReward=100, filename="data.json") {
-            
-            this.difficulty = difficulty;
-            this.reward = miningReward;
-            this.filename = filename;
+export default class Blockchain {
+    constructor(filename, difficulty = 2, reward = 100) {
+        this.difficulty = difficulty;
+        this.reward = reward;
+        this.filename = filename;
 
-            this.chain = [];
-            this.mempol = []
+        this.chain = [];
+        this.mempool = [];
 
-            this.load();
+        this.load();
     }
 
-    save() {
-        fs.writeFileSync(this.filename, JSON.stringify(this.chain,null, 4))
-    }
-
-    createGenesisBlock() {
-            return new Block(0, new Date().toISOString(), [], "0")
+    createGenesis() {
+        return new Block(0, Date.now(), [], "0");
     }
 
     load() {
@@ -34,67 +28,34 @@ export class Blockchain {
         this.chain = data.map(b => new Block(b.index, b.timestamp, b.transactions, b.prevHash));
     }
 
+    save() {
+        fs.writeFileSync(this.filename, JSON.stringify(this.chain, null, 2));
+    }
 
-
-    getLatestBlock() {
+    getLatest() {
         return this.chain[this.chain.length - 1];
     }
 
-    addTransaction(transaction) { 
-        if (!transaction.isValid()) throw new Error("Geçersiz transaction");
-        this.pendingTransactions.push(transaction);
-    }
-
-    minePendingTransactions(minerAddress) {
- 
-        this.pendingTransactions.push(
-            new Transaction(null, minerAddress, this.miningReward)
-        );
-
-        const block = new Block(
-            this.chain.length,
-            new Date().toISOString(),
-            this.pendingTransactions,
-            this.getLatestBlock().hash
-        );
-
-        block.mineBlock(this.difficulty);
-        console.log("Block mine edildi");
-
+    addBlock(block) {
         this.chain.push(block);
- 
-        this.pendingTransactions = [];
-        
         this.save();
-     }
-
-
-    isChainValid() {
-        for (let i = 1; i < this.chain.length; i++) {
-            const curr = this.chain[i];
-            const prev = this.chain[i - 1];
-
-            if (!curr.hasValidTransactions()) return false;
-            if (curr.hash !== curr.calculateHash()) return false;
-            if (curr.prevHash !== prev.hash) return false;
-        }
-
-        return true;
     }
 
-    getBalanceOf(address) {
-    let balance = 0;
-
-    for (const block of this.chain) {
-        for (const tx of block.transactions) {
-            const amount = Number(tx.amount) || 0;
-            if (tx.from === address) balance -= amount;
-            if (tx.to === address) balance += amount;
-        }
+    addTransaction(tx) {
+        if (!tx.isValid()) throw new Error("Geçersiz transaction");
+        this.mempool.push(tx);
     }
 
-    return balance;
- }
+    getBalance(addr) {
+        let balance = 0;
 
+        for (const block of this.chain) {
+            for (const tx of block.transactions) {
+                if (tx.from === addr) balance -= tx.amount;
+                if (tx.to === addr) balance += tx.amount;
+            }
+        }
+
+        return balance;
+    }
 }
-
