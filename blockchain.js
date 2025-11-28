@@ -1,132 +1,40 @@
-import crypto from 'crypto'
 import fs from 'fs'
-import Transaction from './transactions.js';
-
-export class Block {
-    constructor(idx, timestamp, transactions, prevHash = '') {
-        this.idx = idx;
-        this.timestamp = timestamp;
-        this.transactions = transactions;
-        this.prevHash = prevHash;
-        this.nonce = 0;
-        
-
-        this.merkleRoot = this.calculateMerkleRoot();
-        this.hash = this.calculateHash();
-    }
-
-    calculateMerkleRoot() {
-        let hashes = this.transactions.map(
-            transaction => crypto.createHash("sha256").update(JSON.stringify(transaction)).digest("hex")
-        );
-
-        if (hashes.length === 0) {
-            return crypto.createHash("sha256").update("").digest("hex");
-        }
-
-        while (hashes.length > 1) { 
-            let newLevel = []
-
-            for (let i = 0; i < hashes.length; i+=2) {
-                const left = hashes[i];
-                const right = (i + 1 < hashes.length ? hashes[i + 1] : left);
-                const combine = crypto.createHash("sha256").update(left + right).digest("hex");
-                
-                newLevel.push(combine);
-            }
-
-            hashes = newLevel;
-        }
-
-        return hashes[0];
-    }
-
-    calculateHash() {
-    const txData = this.transactions.map(tx => ({from: tx.from, to: tx.to, amount: tx.amount}));
-    return crypto
-        .createHash('sha256')
-        .update(this.idx + this.prevHash + this.timestamp + JSON.stringify(txData) + this.nonce)
-        .digest('hex');
-    }
-
-
-    mineBlock(difficulty) {
-        const target = '0'.repeat(difficulty);
-        
-        while (!this.hash.startsWith(target)) {
-            this.nonce++;
-            this.hash = this.calculateHash();
-        }
-        console.log("Block Mined : " + this.hash);
-    }
-
-    hasValidTransactions() {
-        for (const transaction of this.transactions) if (!transaction.isValid()) return false;
-        return true;
-    }
-}
-
+import Block  from './block'
+ 
 
 export class Blockchain {
     constructor (difficulty=2, miningReward=100, filename="data.json") {
-        this.chain = [this.createGenesisBlock()];
-        
-        this.difficulty = difficulty;
-        this.miningReward = miningReward;
-        this.filename = filename;
-        this.pendingTransactions = [];
+            
+            this.difficulty = difficulty;
+            this.reward = miningReward;
+            this.filename = filename;
 
-        this.load();
+            this.chain = [];
+            this.mempol = []
+
+            this.load();
     }
 
     save() {
         fs.writeFileSync(this.filename, JSON.stringify(this.chain,null, 4))
     }
 
-    load() {
-    if (!fs.existsSync(this.filename)) return;
-
-    try {
-        const raw = fs.readFileSync(this.filename, "utf8");
-
-        if (!raw || raw.trim() === "") {
-            console.warn("data.json boş, yeni zincir oluşturuluyor.");
-            return;
-        }
-
-        const data = JSON.parse(raw);
-
-        if (!Array.isArray(data)) {
-            console.warn("data.json formatı geçersiz, yeni zincir oluşturuluyor.");
-            return;
-        }
-
-        this.chain = data.map(
-                b => {
-                    const block = new Block(
-                        b.idx,
-                        b.timestamp,
-                        b.transactions.map(tx => new Transaction(tx.from, tx.to, Number(tx.amount))),
-                        b.prevHash
-                    );
-                    
-                    block.hash = b.hash; 
-                    block.nonce = b.nonce;    
-
-                    return block;
-                }
-        );
-
-        console.log("Blockchain dosyadan yüklendi.");
-    } catch (e) {
-        console.error("data.json okunamadı veya bozuk. Yeni zincir oluşturuluyor.", e.message);
-    }
-}
-
-
     createGenesisBlock() {
             return new Block(0, new Date().toISOString(), [], "0")
     }
+
+    load() {
+        if (!fs.existsSync(this.filename)) {
+            this.chain = [this.createGenesis()];
+            this.save();
+            return;
+        }
+
+        const data = JSON.parse(fs.readFileSync(this.filename));
+        this.chain = data.map(b => new Block(b.index, b.timestamp, b.transactions, b.prevHash));
+    }
+
+
 
     getLatestBlock() {
         return this.chain[this.chain.length - 1];
@@ -186,7 +94,7 @@ export class Blockchain {
     }
 
     return balance;
-}
+ }
 
 }
 

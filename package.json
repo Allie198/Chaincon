@@ -1,7 +1,7 @@
 {
   "name": "chaincon",
   "version": "1.0.0",
-  "description": "",
+  "description": "",  
   "homepage": "https://github.com/Allie198/Chaincon#readme",
   "bugs": {
     "url": "https://github.com/Allie198/Chaincon/issues"
@@ -12,9 +12,12 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "console.log(\"Hello world\");"
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "inquirer": "^13.0.1"
   }
 }
