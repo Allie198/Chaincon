@@ -203,7 +203,16 @@ export default class Blockchain {
 
         console.log("Daha uzun zincir bulundu, zincir güncellendi.");
         this.chain = newChain;
-        this.cleanupMempool();
+        
+        // Yalnızca blok'taki tx'leri temizle, diğer mempool'daki tx'ler kalabilsin
+        const blockTxHashes = new Set();
+        for (const block of this.chain) {
+            for (const tx of block.transactions) {
+                blockTxHashes.add(tx.calculateHash());
+            }
+        }
+        this.mempool = this.mempool.filter(tx => !blockTxHashes.has(tx.calculateHash()));
+        
         this.save();
     }
 }

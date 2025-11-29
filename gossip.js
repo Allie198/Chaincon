@@ -46,6 +46,11 @@ export default class Gossip {
             type: "CHAIN",
             data: this.node.blockchain.chain
         }));
+
+        ws.send(JSON.stringify({
+            type: "MEMPOOL",
+            data: this.node.blockchain.mempool
+        }));
     }
 
     broadcast(data) {
@@ -60,6 +65,19 @@ export default class Gossip {
     onMessage({ type, data }) {
         if (type === "CHAIN") {
             this.node.blockchain.replaceChain(data);
+        }
+
+        if (type === "MEMPOOL") {
+            // Gelen mempool'u kopyala
+            if (Array.isArray(data)) {
+                for (const txObj of data) {
+                    try {
+                        this.node.addTransactionFromNetwork(txObj);
+                    } catch (e) {
+                        // Zaten ekli veya geçersiz, yok say
+                    }
+                }
+            }
         }
 
         if (type === "NEW_BLOCK") {
