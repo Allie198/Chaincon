@@ -28,18 +28,18 @@ Projeyi kendi bilgisayarınızda çalıştırmak ve nodeları bağlamak için ş
 
 ## kütüphaneler
 
-### 1. Harici Kütüphane (İletişim)
+### 1. Harici Kütüphane 
 
 | Kütüphane Adı | görevi |
 | :--- | :--- |
-| **`ws` (websocket)** | **peerlar arası iletişim** |
+| **`ws`** | **peerlar arası iletişim** |
 |**`crypto`** | **Kriptografik şifreleme** |
 
 ### 2. Node.js Çekirdek Modülleri (Sistem İşlemleri)
 
 | Modül Adı | görevi |
 | :--- | :---
-| **`fs` (File System)** | **Veri Kalıcılığı** |
+| **`fs`** | **Veri Kalıcılığı** |
 |**`events`**| **olay döngüsü haberleşmesi**|
 |**`process`**|**terminal argümanlarını okuma**|
 
@@ -60,3 +60,11 @@ Projeyi kendi bilgisayarınızda çalıştırmak ve nodeları bağlamak için ş
 |**`gossip.js`**|dedikodu ağı|node'ların birbirine bağlanmasını ve blokları birbirine haber vermesini sağlayan yapı.
 |**`blockchain.json`**|kayıt dosyası|zincirin silinmemesi için verilerin tutulduğu json dosyası.
 |**`index.js`**| başlatıcı| uygulamanın giriş noktasıdır, portları ve p2p ağını burdan başlatırız.
+
+    ---
+
+
+### Geliştiriciler
+
+* **gloriaraiden**
+* **Allie198**
