@@ -74,6 +74,8 @@ export default class Blockchain {
             return tx;
         });
 
+        this.cleanupMempool();
+
         console.log(`Blockchain yüklendi. Blok sayısı: ${this.chain.length}`);
     }
 
@@ -90,6 +92,16 @@ export default class Blockchain {
 
     getLatest() {
         return this.chain[this.chain.length - 1];
+    }
+
+    cleanupMempool() {
+        const chainTxHashes = new Set();
+        for (const block of this.chain) {
+            for (const tx of block.transactions) {
+                chainTxHashes.add(tx.calculateHash());
+            }
+        }
+        this.mempool = this.mempool.filter(tx => !chainTxHashes.has(tx.calculateHash()));
     }
 
     addBlock(block) {
@@ -120,7 +132,7 @@ export default class Blockchain {
         return true;
     }
 
-        addTransaction(tx) {
+    addTransaction(tx) {
         if (!tx.isValid()) {
             throw new Error("Geçersiz transaction");
         }
@@ -136,8 +148,7 @@ export default class Blockchain {
         this.save();
     }
 
-
-    getBalance(address) {
+    getConfirmedBalance(address) {
         let balance = 0;
 
         for (const block of this.chain) {
@@ -147,11 +158,16 @@ export default class Blockchain {
             }
         }
 
-        for (const tx of this.mempool) {
-                if (tx.from === address) balance -= tx.amount;
-                if (tx.to === address) balance += tx.amount;
+        return balance;
     }
 
+    getBalance(address) {
+        let balance = this.getConfirmedBalance(address);
+
+        for (const tx of this.mempool) {
+            if (tx.from === address) balance -= tx.amount;
+            if (tx.to === address) balance += tx.amount;
+        }
 
         return balance;
     }
@@ -187,6 +203,7 @@ export default class Blockchain {
 
         console.log("Daha uzun zincir bulundu, zincir güncellendi.");
         this.chain = newChain;
+        this.cleanupMempool();
         this.save();
     }
 }
