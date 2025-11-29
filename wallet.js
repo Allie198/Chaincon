@@ -1,34 +1,11 @@
+import fs from "fs";
 import EC from "elliptic";
 import crypto from "crypto";
+import { publicKeyToAddress } from "./crypto-utils.js";
 
 const ec = new EC.ec("secp256k1");
 
-const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-function base58encode(buffer) {
-    let x = BigInt("0x" + buffer.toString("hex"));
-    let output = "";
-    while (x > 0) {
-        const mod = Number(x % 58n);
-        output = BASE58[mod] + output;
-        x = x / 58n;
-    }
-    return output;
-}
-
-function publicKeyToAddress(pubKeyHex) {
-    const sha = crypto.createHash("sha256").update(Buffer.from(pubKeyHex, "hex")).digest();
-    const ripe = crypto.createHash("ripemd160").update(sha).digest();
-    return base58encode(ripe);
-}
-
-
 export default class Wallet {
-    /**
-
-     * @param {string|null} privateKeyHex 
-     */
-
     constructor(privateKeyHex = null) {
         if (privateKeyHex) {
             this.keyPair = ec.keyFromPrivate(privateKeyHex, "hex");
@@ -48,30 +25,6 @@ export default class Wallet {
         tx.sign(this.keyPair);
     }
 
-    signMessage(msg) {
-        const msgHash = crypto.createHash("sha256").update(msg).digest("hex");
-        return this.key.sign(msgHash, "hex");
-    }
-
-     static verifyMessage(msg, signature, publicKey) {
-        const key = ec.keyFromPublic(publicKey, "hex");
-        const msgHash = crypto.createHash("sha256").update(msg).digest("hex");
-        return key.verify(msgHash, signature);
-    }
-
-    getBalance(blockchain) {
-        let balance = 0;
-
-        for (const block of blockchain.chain) {
-            for (const tx of block.transactions) {
-                if (tx.from === this.address) balance -= tx.amount;
-                if (tx.to === this.address) balance += tx.amount;
-            }
-        }
-
-        return balance;
-    }
-
     export() {
         return {
             privateKey: this.privateKey,
@@ -85,7 +38,19 @@ export default class Wallet {
         return new Wallet(json.privateKey);
     }
 
+    saveToFile(filename) {
+        fs.writeFileSync(filename, JSON.stringify(this.export(), null, 2), "utf8");
+    }
 
-
-
+    static loadOrCreate(filename) {
+        if (fs.existsSync(filename)) {
+            const raw = fs.readFileSync(filename, "utf8");
+            const data = JSON.parse(raw);
+            return Wallet.import(data);
+        } else {
+            const wallet = new Wallet();
+            wallet.saveToFile(filename);
+            return wallet;
+        }
+    }
 }

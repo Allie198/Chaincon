@@ -1,6 +1,6 @@
+import EventEmitter from "events";
 import Block from "./block.js";
 import Transaction from "./transactions.js";
-import EventEmitter from "events";
 
 export default class Miner extends EventEmitter {
     constructor(blockchain, rewardAddress) {
@@ -16,8 +16,7 @@ export default class Miner extends EventEmitter {
     }
 
     selectTransactions(limit = 5000) {
-        const mempool = [...this.blockchain.mempool];
-        return mempool.slice(0, limit);
+        return this.blockchain.mempool.slice(0, limit);
     }
 
     countHash() {
@@ -40,8 +39,7 @@ export default class Miner extends EventEmitter {
         }
 
         this.isMining = true;
-        this.currentJobId++;
-        const jobId = this.currentJobId;
+        const jobId = ++this.currentJobId;
 
         this.emit("miningStarted");
 
@@ -64,7 +62,6 @@ export default class Miner extends EventEmitter {
         const target = "0".repeat(this.blockchain.difficulty);
 
         while (this.isMining) {
- 
             if (jobId !== this.currentJobId) {
                 console.log("Mining iptal edildi (yeni iş başladı).");
                 this.emit("miningStopped");
@@ -79,27 +76,28 @@ export default class Miner extends EventEmitter {
             if (block.hash.startsWith(target)) {
                 console.log("Blok mine edildi | Hash:", block.hash);
 
-                this.blockchain.addBlock(block);
-                this.blockchain.mempool = [];
-
-                this.isMining = false;
-                this.emit("blockMined", block);
+                const ok = this.blockchain.addBlock(block);
+                if (ok) {
+                    this.isMining = false;
+                    this.emit("blockMined", block);
+                } else {
+                    console.log("Blok zincire eklenemedi.");
+                }
                 return block;
             }
 
-  
             await new Promise(res => setImmediate(res));
         }
 
         console.log("Mining durduruldu.");
         this.emit("miningStopped");
     }
- 
+
     stop() {
         if (!this.isMining) return;
 
         this.isMining = false;
-        this.currentJobId++ 
+        this.currentJobId++;
         console.log("Mining durduruldu.");
         this.emit("miningStopped");
     }

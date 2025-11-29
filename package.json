@@ -1,7 +1,7 @@
 {
   "name": "chaincon",
   "version": "1.0.0",
-  "description": "",  
+  "description": "",
   "homepage": "https://github.com/Allie198/Chaincon#readme",
   "bugs": {
     "url": "https://github.com/Allie198/Chaincon/issues"
@@ -18,6 +18,9 @@
     "test": "node test.js"
   },
   "dependencies": {
-    "inquirer": "^13.0.1"
+    "elliptic": "^6.6.1",
+    "express": "^5.1.0",
+    "inquirer": "^13.0.1",
+    "ws": "^8.18.3"
   }
 }
