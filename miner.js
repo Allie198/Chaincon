@@ -1,5 +1,5 @@
 import Block from "./block.js";
-import Transaction from "./transactions.js"
+import Transaction from "./transactions.js";
 import EventEmitter from "events";
 
 export default class Miner extends EventEmitter {
@@ -9,16 +9,15 @@ export default class Miner extends EventEmitter {
         this.rewardAddress = rewardAddress;
 
         this.isMining = false;
-        
-        this.currentJob = 0;
+        this.currentJobId = 0;
+        this.hashCounter = 0;
         this.hashesPerSecond = 0;
         this.lastHashCountTime = 0;
-        this.hashCounter = 0;
     }
 
-    selectTransaction(limit=5000) { 
-            let mempool = [...this.blockchain.mempool];
-            return mempool.slice(0,limit);
+    selectTransactions(limit = 5000) {
+        const mempool = [...this.blockchain.mempool];
+        return mempool.slice(0, limit);
     }
 
     countHash() {
@@ -34,22 +33,21 @@ export default class Miner extends EventEmitter {
         }
     }
 
-    async mine() { 
+    async mine() {
         if (this.isMining) {
-            console.log("Zaten mining yapılıyor");
+            console.log("Zaten mining yapılıyor.");
             return;
-
         }
 
         this.isMining = true;
-        this.currentJob++;
-        const job = this.currentJob;
+        this.currentJobId++;
+        const jobId = this.currentJobId;
+
         this.emit("miningStarted");
 
         const rewardTx = new Transaction(null, this.rewardAddress, this.blockchain.reward);
-        this.blockchain.mempool.push(rewardTx);
-
         const selectedTxs = this.selectTransactions();
+        selectedTxs.push(rewardTx);
 
         const block = new Block(
             this.blockchain.chain.length,
@@ -58,18 +56,17 @@ export default class Miner extends EventEmitter {
             this.blockchain.getLatest().hash
         );
 
-        console.log("Mining Başladı | İşlem Sayısı: " + selectedTxs.length);
+        console.log("Mining başladı | İşlem Sayısı:", selectedTxs.length);
 
         this.lastHashCountTime = Date.now();
         this.hashCounter = 0;
 
         const target = "0".repeat(this.blockchain.difficulty);
 
-        while (true) {
+        while (this.isMining) {
  
             if (jobId !== this.currentJobId) {
-                console.log("Mining iptal edildi | yeni iş başlatıldı.");
-                this.isMining = false;
+                console.log("Mining iptal edildi (yeni iş başladı).");
                 this.emit("miningStopped");
                 return;
             }
@@ -80,28 +77,30 @@ export default class Miner extends EventEmitter {
             this.countHash();
 
             if (block.hash.startsWith(target)) {
-                console.log(`Blok mine edildi | Hash: ${block.hash}`);
+                console.log("Blok mine edildi | Hash:", block.hash);
 
                 this.blockchain.addBlock(block);
                 this.blockchain.mempool = [];
 
                 this.isMining = false;
                 this.emit("blockMined", block);
-
                 return block;
             }
- 
-            await new Promise(r => setImmediate(r));
-        }
-    }
 
+  
+            await new Promise(res => setImmediate(res));
+        }
+
+        console.log("Mining durduruldu.");
+        this.emit("miningStopped");
+    }
+ 
     stop() {
         if (!this.isMining) return;
 
         this.isMining = false;
-        this.currentJobId++;
-        this.emit("miningStopped");
+        this.currentJobId++ 
         console.log("Mining durduruldu.");
+        this.emit("miningStopped");
     }
-
-    }
+}
