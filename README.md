@@ -1,11 +1,9 @@
 
 # ITU Blockchain Devs komitesi I. proje : Chaincon
 
+**Bu bir devs komitesine adına yapılmış p2p çalışan bir blockchain projesidir**.
 
-**Bu bir devs komitesine adına yapılmış bir blockchainin basit bir modülüdür**.
-
-
-Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin:
+Projeyi kendi bilgisayarınızda çalıştırmak ve nodeları bağlamak için şunları yapın:
 
 1.  **Projeyi İndirin**
     ```bash
@@ -14,53 +12,51 @@ Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları i
     ```
 
 2.  **Gerekli Paketleri Yükleyin**
-    Proje `inquirer` gibi harici kütüphaneler kullandığı için NPM paketlerini yüklemelisiniz
+    Proje `ws` gibi soket kütüphaneleri kullandığı için NPM paketlerini yüklemelisiniz
     ```bash
     npm install
     ```
 
 3.  **Uygulamayı Başlatın**
+    farklı terminaller açarak port numarasıyla başlatman lazım
     ```bash
-    node cli.js
+    node index.js 6001
+    node index.js 6002 6001
     ```
 
-  ---
+ ---
 
 ## kütüphaneler
 
-### 1. Harici Kütüphane (Kullanıcı Arayüzü)
+### 1. Harici Kütüphane (İletişim)
 
 | Kütüphane Adı | görevi |
-| :--- | :--- | 
-| **`inquirer`** | **İnteraktif CLI Arayüzü** | 
-|**`ws(websocket)`** | **p2p iletişim** | 
-|**`elliptic`** | **Kriptografik İmza**|
+| :--- | :--- |
+| **`ws` (websocket)** | **peerlar arası iletişim** |
+|**`crypto`** | **Kriptografik şifreleme** |
 
 ### 2. Node.js Çekirdek Modülleri (Sistem İşlemleri)
 
-
-
-| Modül Adı | görevi | 
-| :--- | :--- 
-| **`crypto`** | **Kriptografik İşlemler** |
-| **`fs` (File System)** | **Veri Kalıcılığı** | 
-|**`events`**| **Kod içi haberleşme**|
-|**`path`**|**dosya yolu düzenleyicisi**|
+| Modül Adı | görevi |
+| :--- | :---
+| **`fs` (File System)** | **Veri Kalıcılığı** |
+|**`events`**| **olay döngüsü haberleşmesi**|
+|**`process`**|**terminal argümanlarını okuma**|
 
 
 ---
 
 ## dosyaların işleyişi
 
- Bu proje **blokzincir mantığını**, **madencilik (Proof of Work) mekanizmasını**, **işlem doğrulama süreçlerini** ve **hashleme** yöntemlerini barındırır
+ Bu proje **blokzincir mantığını**, **madencilik (Proof of Work)**, **gossip protokolü** ve **cüzdan** işlemlerini barındırır
 
 | dosya |  mantığı | görevi |
-| :--- | :--- | :--- 
-|**`transaction.js`**| Atomik işlem yükü| Transferin kimden kime yapılıcağını ve ne kadar yapılıcağını belirler.İçeriğin değiştirilip değiştirilmediğini kontrol eder.|
-|**`block.js`**| değiştirelemez veri bütünü | Bir çok işlemi bir araya getirerek prevHashle bunları kilitler. Proof of Work için gerekli olan nonce burada çözülür |
-|**`blockchain.js`**|dağıtık defter kordinatörü | Tüm blokların bağlı liste veri yapısında tutulmasını, şifre olarak doğrulayan ve durum yönetimini yapan ana kontrol dizini budur.
-|**`miner.js`** |işlem onaylayıcısı ve çifre çözücü | hash değerini bulmak için donanım gücünü harayan asenkron yapıdır.
-|**`wallet.js`**|anahtar yönetim arayüzü |public ve private anahtarlarını üretmeye yarayan ve public keyi base58 formatında adres üretimini sağlar
-|**`gossip.js`**|peerlar arası veri dağıtım ağı|perelar arasında webSocket ile çift yönlü veri akışını sağlayan sistemdir.
-|**`data.json`**|kaydedilmiş defter verisi|bellekteki zincir verisini json formatında dizileştirerek disk üzerine yazan veri kalıcılığını sağlayan yapı.
-|**`test.js`**| uygulama terminali| chaincon'un terminal arayüzünü oluşturan kısımdır
+| :--- | :--- | :---
+|**`transactions.js`**| işlem yükü| Transferin kimden kime gidiceğini ve imza kontrolünü yapar. paranın miktarını belirler.|
+|**`block.js`**| kilitli veri kutusu | işlemleri içine alır ve prevHash ile öncekine bağlar. madencilik burda yapılır |
+|**`blockchain.js`**|defter kordinatörü | Zincirin kopmamasını sağlar, blokları kontrol eder ve validasyon yapar.
+|**`miner.js`** |kazı yapan işçi | bilgisayarın gücünü kullanarak hash bulmaya çalışır ve ödülü kapar.
+|**`walletStore.js`**|cüzdan deposu |cüzdan dosyası yoksa yenisini oluşturur varsa eskini yükler.
+|**`gossip.js`**|dedikodu ağı|node'ların birbirine bağlanmasını ve blokları birbirine haber vermesini sağlayan yapı.
+|**`blockchain.json`**|kayıt dosyası|zincirin silinmemesi için verilerin tutulduğu json dosyası.
+|**`index.js`**| başlatıcı| uygulamanın giriş noktasıdır, portları ve p2p ağını burdan başlatırız.
