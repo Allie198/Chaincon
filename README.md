@@ -61,10 +61,12 @@ Projeyi kendi bilgisayarınızda çalıştırmak ve nodeları bağlamak için ş
 |**`blockchain.json`**|kayıt dosyası|zincirin silinmemesi için verilerin tutulduğu json dosyası.
 |**`index.js`**| başlatıcı| uygulamanın giriş noktasıdır, portları ve p2p ağını burdan başlatırız.
 
-    ---
+   
+ 
 
 
 ### Geliştiriciler
 
-* **gloriaraiden**
 * **Allie198**
+* **gloriaraiden**
+
