@@ -1,4 +1,3 @@
-// block.js
 import crypto from "crypto";
 
 export default class Block {

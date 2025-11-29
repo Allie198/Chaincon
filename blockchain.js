@@ -129,70 +129,55 @@ export default class Blockchain {
     }
 
     getBalance(address) {
-            let balance = 0;
+        let balance = 0;
 
-            const chainTxHashes = new Set();
-
-            for (const block of this.chain) {
-                for (const tx of block.transactions) {
-                    chainTxHashes.add(tx.calculateHash());
-                    if (tx.from === address) balance -= tx.amount;
-                    if (tx.to === address) balance += tx.amount;
-                }
-            }
-
-            for (const tx of this.mempool) {
-                if (chainTxHashes.has(tx.calculateHash())) continue;
+        for (const block of this.chain) {
+            for (const tx of block.transactions) {
                 if (tx.from === address) balance -= tx.amount;
                 if (tx.to === address) balance += tx.amount;
             }
+        }
 
-            return balance;
-}
+        for (const tx of this.mempool) {
+                if (tx.from === address) balance -= tx.amount;
+                if (tx.to === address) balance += tx.amount;
+    }
 
+
+        return balance;
+    }
 
     replaceChain(newChainPlain) {
-    if (!Array.isArray(newChainPlain)) return;
-    if (newChainPlain.length <= this.chain.length) return;
+        if (!Array.isArray(newChainPlain)) return;
+        if (newChainPlain.length <= this.chain.length) return;
 
-    const newChain = [];
-    for (const b of newChainPlain) {
-        const block = this.createBlockFromPlain(b);
-        newChain.push(block);
+        const newChain = [];
+        for (const b of newChainPlain) {
+            const block = this.createBlockFromPlain(b);
+            newChain.push(block);
+        }
+
+        for (let i = 1; i < newChain.length; i++) {
+            const prev = newChain[i - 1];
+            const curr = newChain[i];
+
+            if (curr.prevHash !== prev.hash) {
+                console.log("Gelen zincir geçersiz (prevHash)");
+                return;
+            }
+            const target = "0".repeat(this.difficulty);
+            if (!curr.hash.startsWith(target)) {
+                console.log("Gelen zincir geçersiz (difficulty)");
+                return;
+            }
+            if (!curr.hasValidTransactions()) {
+                console.log("Gelen zincir geçersiz (tx)");
+                return;
+            }
+        }
+
+        console.log("Daha uzun zincir bulundu, zincir güncellendi.");
+        this.chain = newChain;
+        this.save();
     }
-
-    for (let i = 1; i < newChain.length; i++) {
-        const prev = newChain[i - 1];
-        const curr = newChain[i];
-
-        if (curr.prevHash !== prev.hash) {
-            console.log("Gelen zincir geçersiz (prevHash)");
-            return;
-        }
-        const target = "0".repeat(this.difficulty);
-        if (!curr.hash.startsWith(target)) {
-            console.log("Gelen zincir geçersiz (difficulty)");
-            return;
-        }
-        if (!curr.hasValidTransactions()) {
-            console.log("Gelen zincir geçersiz (tx)");
-            return;
-        }
-    }
-
-    console.log("Daha uzun zincir bulundu, zincir güncellendi.");
-    this.chain = newChain;
-
-    const chainTxHashes = new Set();
-    for (const block of this.chain) {
-        for (const tx of block.transactions) {
-            chainTxHashes.add(tx.calculateHash());
-        }
-    }
-
-    this.mempool = this.mempool.filter(tx => !chainTxHashes.has(tx.calculateHash()));
-
-    this.save();
-}
-
 }

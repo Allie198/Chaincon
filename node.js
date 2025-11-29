@@ -32,6 +32,27 @@ export default class Node {
         this.startCli();
     }
 
+    printChain() {
+    const formatted = this.blockchain.chain.map(block => ({
+        idx: block.idx,
+        timestamp: block.timestamp,
+        prevHash: block.prevHash,
+        hash: block.hash,
+        nonce: block.nonce,
+        merkleRoot: block.merkleRoot,
+        transactions: block.transactions.map(tx => ({
+            from: tx.from,
+            to: tx.to,
+            amount: tx.amount,
+            senderPublicKey: tx.senderPublicKey,
+            signature: tx.signature
+        }))
+    }));
+
+    console.log(JSON.stringify(formatted, null, 2));
+}
+
+
     startCli() {
         console.log("Node başladı. P2P port:", this.p2pPort);
         console.log("Wallet address:", this.wallet.address);
@@ -101,9 +122,7 @@ export default class Node {
                     }
 
                     case "chain": {
-                        this.blockchain.chain.forEach(b => {
-                            console.log(`#${b.idx} ${b.hash} (tx: ${b.transactions.length})`);
-                        });
+                        this.printChain();
                         break;
                     }
 
