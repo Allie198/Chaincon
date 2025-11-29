@@ -120,13 +120,22 @@ export default class Blockchain {
         return true;
     }
 
-    addTransaction(tx) {
+        addTransaction(tx) {
         if (!tx.isValid()) {
             throw new Error("Geçersiz transaction");
         }
+
+        if (tx.from !== null) {
+            const senderBalance = this.getBalance(tx.from);
+            if (senderBalance < tx.amount) {
+                throw new Error("Yetersiz bakiye");
+            }
+        }
+
         this.mempool.push(tx);
         this.save();
     }
+
 
     getBalance(address) {
         let balance = 0;
