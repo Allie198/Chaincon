@@ -31,6 +31,7 @@ Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları i
 | :--- | :--- | 
 | **`inquirer`** | **İnteraktif CLI Arayüzü** | 
 |**`ws(websocket)`** | **p2p iletişim** | 
+|**`elliptic`** | **Kriptografik İmza**|
 
 ### 2. Node.js Çekirdek Modülleri (Sistem İşlemleri)
 
@@ -40,6 +41,9 @@ Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları i
 | :--- | :--- 
 | **`crypto`** | **Kriptografik İşlemler** |
 | **`fs` (File System)** | **Veri Kalıcılığı** | 
+|**`events`**| **Kod içi haberleşme**|
+|**`path`**|** dosya yolu düzenleyicisi**|
+
 
 ---
 
